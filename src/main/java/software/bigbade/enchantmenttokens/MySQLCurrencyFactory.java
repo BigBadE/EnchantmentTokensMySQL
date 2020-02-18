@@ -28,7 +28,6 @@ public class MySQLCurrencyFactory implements CurrencyFactory {
             getDatabase(section);
         } catch (SQLException e) {
             EnchantLogger.log(Level.SEVERE, "Could not open connection to database", e);
-            e.printStackTrace();
         }
     }
 
@@ -54,7 +53,7 @@ public class MySQLCurrencyFactory implements CurrencyFactory {
         try {
             connection.close();
         } catch (SQLException e) {
-            e.printStackTrace();
+            EnchantLogger.log("Problem stopping database", e);
         }
     }
 }

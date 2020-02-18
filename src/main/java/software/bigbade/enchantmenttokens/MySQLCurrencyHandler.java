@@ -1,6 +1,7 @@
 package software.bigbade.enchantmenttokens;
 
 import org.bukkit.entity.Player;
+import software.bigbade.enchantmenttokens.utils.EnchantLogger;
 import software.bigbade.enchantmenttokens.utils.currency.CurrencyHandler;
 
 import java.sql.ResultSet;
@@ -13,6 +14,7 @@ public class MySQLCurrencyHandler implements CurrencyHandler {
     private String playerSection;
     private boolean contains = false;
 
+    @SuppressWarnings("SqlResolve")
     public MySQLCurrencyHandler(Player player, Statement statement, String playerSection) {
         this.statement = statement;
         this.playerSection = playerSection;
@@ -20,13 +22,12 @@ public class MySQLCurrencyHandler implements CurrencyHandler {
             ResultSet set = statement.executeQuery("SELECT * FROM " + playerSection + " WHERE uuid='" + player.getUniqueId() + "' LIMIT 1;");
             if (set.next()) {
                 contains = true;
-                //set.beforeFirst();
                 gems = set.getLong(1);
             } else {
                 gems = 0;
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            EnchantLogger.log("Problem initializing MySQL", e);
         }
     }
 
@@ -45,6 +46,7 @@ public class MySQLCurrencyHandler implements CurrencyHandler {
         gems += amount;
     }
 
+    @SuppressWarnings("SqlResolve")
     @Override
     public void savePlayer(Player player) {
         try {
@@ -53,7 +55,7 @@ public class MySQLCurrencyHandler implements CurrencyHandler {
             else
                 statement.execute("INSERT INTO " + playerSection + "(uuid, gems) VALUES ('" + player.getUniqueId() + "', '" + gems + "');");
         } catch (SQLException e) {
-            e.printStackTrace();
+            EnchantLogger.log("Problem updating MySQL table", e);
         }
     }
 
