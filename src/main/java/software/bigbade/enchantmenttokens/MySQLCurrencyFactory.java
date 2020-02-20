@@ -2,8 +2,9 @@ package software.bigbade.enchantmenttokens;
 
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
-import software.bigbade.enchantmenttokens.utils.ConfigurationManager;
+import software.bigbade.enchantmenttokens.utils.configuration.ConfigurationManager;
 import software.bigbade.enchantmenttokens.utils.EnchantLogger;
+import software.bigbade.enchantmenttokens.utils.configuration.ConfigurationType;
 import software.bigbade.enchantmenttokens.utils.currency.CurrencyFactory;
 import software.bigbade.enchantmenttokens.utils.currency.CurrencyHandler;
 
@@ -17,9 +18,9 @@ public class MySQLCurrencyFactory implements CurrencyFactory {
 
     public MySQLCurrencyFactory(EnchantmentTokens main, ConfigurationSection section) {
         try {
-            String url = (String) ConfigurationManager.getValueOrDefault("database", section, "");
-            String username = (String) ConfigurationManager.getValueOrDefault("username", section, null);
-            String password = (String) ConfigurationManager.getValueOrDefault("password", section, null);
+            String url = new ConfigurationType<String>("").getValue("database", section);
+            String username = new ConfigurationType<String>(null).getValue("username", section);
+            String password = new ConfigurationType<String>(null).getValue("password", section);
 
             connection = DriverManager.getConnection(url, username, password);
 
@@ -32,10 +33,11 @@ public class MySQLCurrencyFactory implements CurrencyFactory {
     }
 
     private void getDatabase(ConfigurationSection section) throws SQLException {
-        playerSection = (String) ConfigurationManager.getValueOrDefault("section", section, "players");
+        playerSection = new ConfigurationType<String>("players").getValue("section", section);
         ResultSet result = statement.executeQuery("SELECT * FROM information_schema.TABLES WHERE TABLE_NAME = '" + playerSection + "' AND TABLE_SCHEMA = 'EnchantmentTokens' LIMIT 1;");
         if (!result.next())
             statement.execute("CREATE TABLE " + playerSection + "(gems LONG NOT NULL, uuid CHAR(36) NOT NULL);");
+        result.close();
     }
 
     @Override
