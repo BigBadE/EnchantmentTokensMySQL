@@ -15,6 +15,7 @@ public class MySQLCurrencyFactory implements CurrencyFactory {
     private Connection connection;
     private Statement statement;
     private String playerSection;
+    private boolean loaded;
 
     public MySQLCurrencyFactory(EnchantmentTokens main, ConfigurationSection section) {
         try {
@@ -27,6 +28,8 @@ public class MySQLCurrencyFactory implements CurrencyFactory {
             statement = connection.createStatement();
 
             getDatabase(section);
+
+            loaded = true;
         } catch (SQLException e) {
             EnchantLogger.log(Level.SEVERE, "Could not open connection to database", e);
         }
@@ -57,5 +60,10 @@ public class MySQLCurrencyFactory implements CurrencyFactory {
         } catch (SQLException e) {
             EnchantLogger.log("Problem stopping database", e);
         }
+    }
+
+    @Override
+    public boolean loaded() {
+        return loaded;
     }
 }
