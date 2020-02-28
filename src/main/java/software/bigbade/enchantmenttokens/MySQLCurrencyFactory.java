@@ -2,7 +2,6 @@ package software.bigbade.enchantmenttokens;
 
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
-import software.bigbade.enchantmenttokens.utils.configuration.ConfigurationManager;
 import software.bigbade.enchantmenttokens.utils.EnchantLogger;
 import software.bigbade.enchantmenttokens.utils.configuration.ConfigurationType;
 import software.bigbade.enchantmenttokens.utils.currency.CurrencyFactory;
@@ -19,9 +18,9 @@ public class MySQLCurrencyFactory implements CurrencyFactory {
 
     public MySQLCurrencyFactory(EnchantmentTokens main, ConfigurationSection section) {
         try {
-            String url = new ConfigurationType<String>("").getValue("database", section);
-            String username = new ConfigurationType<String>(null).getValue("username", section);
-            String password = new ConfigurationType<String>(null).getValue("password", section);
+            String url = new ConfigurationType<>("").getValue("database", section);
+            String username = new ConfigurationType<>("").getValue("username", section);
+            String password = new ConfigurationType<>("").getValue("password", section);
 
             connection = DriverManager.getConnection(url, username, password);
 
@@ -36,11 +35,11 @@ public class MySQLCurrencyFactory implements CurrencyFactory {
     }
 
     private void getDatabase(ConfigurationSection section) throws SQLException {
-        playerSection = new ConfigurationType<String>("players").getValue("section", section);
-        ResultSet result = statement.executeQuery("SELECT * FROM information_schema.TABLES WHERE TABLE_NAME = '" + playerSection + "' AND TABLE_SCHEMA = 'EnchantmentTokens' LIMIT 1;");
-        if (!result.next())
-            statement.execute("CREATE TABLE " + playerSection + "(gems LONG NOT NULL, uuid CHAR(36) NOT NULL);");
-        result.close();
+        playerSection = new ConfigurationType<>("players").getValue("section", section);
+        try (ResultSet result = statement.executeQuery("SELECT * FROM information_schema.TABLES WHERE TABLE_NAME = '" + playerSection + "' AND TABLE_SCHEMA = 'EnchantmentTokens' LIMIT 1;")) {
+            if (!result.next())
+                statement.execute("CREATE TABLE " + playerSection + "(gems LONG NOT NULL, uuid CHAR(36) NOT NULL);");
+        }
     }
 
     @Override
