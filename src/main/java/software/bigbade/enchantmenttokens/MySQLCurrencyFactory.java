@@ -29,6 +29,7 @@ public class MySQLCurrencyFactory implements CurrencyFactory {
             loaded = true;
         } catch (SQLException e) {
             EnchantLogger.log("Could not open connection to database", e);
+            loaded = false;
         }
     }
 
