@@ -9,14 +9,14 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-public class MySQLCurrencyHandler implements CurrencyHandler {
-    private long gems;
+public class MySQLCurrencyHandler extends CurrencyHandler {
     private Connection connection;
     private String playerSection;
     private boolean contains = false;
 
     @SuppressWarnings("SqlResolve")
     public MySQLCurrencyHandler(Player player, Connection connection, String playerSection) throws SQLException {
+        super("mysql");
         this.connection = connection;
         this.playerSection = playerSection;
         ResultSet set = null;
@@ -25,9 +25,9 @@ public class MySQLCurrencyHandler implements CurrencyHandler {
             set = preparedStatement.executeQuery();
             if (set.next()) {
                 contains = true;
-                gems = set.getLong(1);
+                setAmount(set.getLong(1));
             } else {
-                gems = 0;
+                setAmount(0);
             }
         } finally {
             if (set != null)
@@ -35,35 +35,20 @@ public class MySQLCurrencyHandler implements CurrencyHandler {
         }
     }
 
-    @Override
-    public long getAmount() {
-        return gems;
-    }
-
-    @Override
-    public void setAmount(long amount) {
-        gems = amount;
-    }
-
-    @Override
-    public void addAmount(long amount) {
-        gems += amount;
-    }
-
     @SuppressWarnings("SqlResolve")
     @Override
-    public void savePlayer(Player player) {
+    public void savePlayer(Player player, boolean async) {
         PreparedStatement statement = null;
         try {
             if (contains) {
                 statement = connection.prepareStatement("UPDATE ? SET gems=? WHERE uuid=? LIMIT 1;");
                 statement.setString(1, playerSection);
-                statement.setLong(2, gems);
+                statement.setLong(2, getAmount());
                 statement.setString(3, player.getUniqueId().toString());
             } else {
                 statement = connection.prepareStatement("INSERT INTO " + playerSection + " (uuid, gems) VALUES (?, ?);");
                 statement.setString(1, player.getUniqueId().toString());
-                statement.setLong(2, gems);
+                statement.setLong(2, getAmount());
             }
             statement.executeUpdate();
         } catch (SQLException e) {
@@ -81,10 +66,5 @@ public class MySQLCurrencyHandler implements CurrencyHandler {
         } catch (Exception e) {
             EnchantLogger.log("Could not close MySQL statement", e);
         }
-    }
-
-    @Override
-    public String name() {
-        return "mysql";
     }
 }

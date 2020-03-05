@@ -11,12 +11,13 @@ import java.sql.*;
 import java.util.logging.Level;
 import java.util.regex.Pattern;
 
-public class MySQLCurrencyFactory implements CurrencyFactory {
+public class MySQLCurrencyFactory extends CurrencyFactory {
     private Connection connection;
     private String playerSection;
     private boolean loaded;
 
     public MySQLCurrencyFactory(ConfigurationSection section) {
+        super("mysql");
         try {
             String url = "jdbc:" + new ConfigurationType<>("").getValue("database", section);
             String username = new ConfigurationType<>("").getValue("username", section);
