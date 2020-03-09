@@ -35,7 +35,7 @@ public class MySQLCurrencyFactory extends CurrencyFactory {
     }
 
     private void getDatabase(ConfigurationSection section) throws SQLException {
-        playerSection = new ConfigurationType<String>("players").getValue("section", section);
+        playerSection = new ConfigurationType<>("players").getValue("section", section);
         if(Pattern.matches("[^a-zA-Z\\d\\s:]", playerSection)) {
             loaded = false;
             EnchantLogger.log(Level.SEVERE, "NON-ALPHANUMERIC CHARACTER DETECTED. POSSIBLE MYSQL INJECTION!");
