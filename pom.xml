@@ -30,7 +30,7 @@
         </dependency>
         <dependency>
             <groupId>software.bigbade.enchantmenttokens</groupId>
-            <artifactId>EnchantmentTokens</artifactId>
+            <artifactId>EnchantmentTokensPublic</artifactId>
             <version>1.1</version>
             <scope>provided</scope>
         </dependency>

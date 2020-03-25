@@ -2,22 +2,20 @@ package software.bigbade.enchantmenttokens;
 
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
-import software.bigbade.enchantmenttokens.utils.EnchantLogger;
-import software.bigbade.enchantmenttokens.utils.configuration.ConfigurationType;
-import software.bigbade.enchantmenttokens.utils.currency.CurrencyFactory;
-import software.bigbade.enchantmenttokens.utils.currency.CurrencyHandler;
+import software.bigbade.enchantmenttokens.configuration.ConfigurationType;
+import software.bigbade.enchantmenttokens.currency.CurrencyFactory;
+import software.bigbade.enchantmenttokens.currency.CurrencyHandler;
 
 import java.sql.*;
 import java.util.logging.Level;
 import java.util.regex.Pattern;
 
-public class MySQLCurrencyFactory extends CurrencyFactory {
+public class MySQLCurrencyFactory implements CurrencyFactory {
     private Connection connection;
     private String playerSection;
     private boolean loaded;
 
     public MySQLCurrencyFactory(ConfigurationSection section) {
-        super("mysql");
         try {
             String url = "jdbc:" + new ConfigurationType<>("").getValue("database", section);
             String username = new ConfigurationType<>("").getValue("username", section);
@@ -29,7 +27,7 @@ public class MySQLCurrencyFactory extends CurrencyFactory {
 
             loaded = true;
         } catch (SQLException e) {
-            EnchantLogger.log("Could not open connection to database", e);
+            EnchantmentTokens.getEnchantLogger().log(Level.SEVERE, "Could not open connection to database", e);
             loaded = false;
         }
     }
@@ -38,7 +36,7 @@ public class MySQLCurrencyFactory extends CurrencyFactory {
         playerSection = new ConfigurationType<>("players").getValue("section", section);
         if(Pattern.matches("[^a-zA-Z\\d\\s:]", playerSection)) {
             loaded = false;
-            EnchantLogger.log(Level.SEVERE, "NON-ALPHANUMERIC CHARACTER DETECTED. POSSIBLE MYSQL INJECTION!");
+            EnchantmentTokens.getEnchantLogger().log(Level.SEVERE, "NON-ALPHANUMERIC CHARACTER DETECTED. POSSIBLE MYSQL INJECTION!");
             return;
         }
         ResultSet resultSet = null;
@@ -61,7 +59,7 @@ public class MySQLCurrencyFactory extends CurrencyFactory {
         try {
             return new MySQLCurrencyHandler(player, connection, playerSection);
         } catch (SQLException e) {
-            EnchantLogger.log("Problem initializing MySQL", e);
+            EnchantmentTokens.getEnchantLogger().log(Level.SEVERE, "Problem initializing MySQL", e);
         }
         return null;
     }
@@ -76,7 +74,7 @@ public class MySQLCurrencyFactory extends CurrencyFactory {
         try {
             connection.close();
         } catch (SQLException e) {
-            EnchantLogger.log("Problem stopping database", e);
+            EnchantmentTokens.getEnchantLogger().log(Level.SEVERE, "Problem stopping database connection", e);
         }
     }
 

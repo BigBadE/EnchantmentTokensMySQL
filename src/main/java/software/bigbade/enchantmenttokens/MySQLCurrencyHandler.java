@@ -1,22 +1,23 @@
 package software.bigbade.enchantmenttokens;
 
 import org.bukkit.entity.Player;
-import software.bigbade.enchantmenttokens.utils.EnchantLogger;
-import software.bigbade.enchantmenttokens.utils.currency.CurrencyHandler;
+import software.bigbade.enchantmenttokens.currency.CurrencyHandler;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.logging.Level;
 
-public class MySQLCurrencyHandler extends CurrencyHandler {
+public class MySQLCurrencyHandler implements CurrencyHandler {
     private Connection connection;
     private String playerSection;
     private boolean contains = false;
 
+    long gems = 0;
+
     @SuppressWarnings("SqlResolve")
     public MySQLCurrencyHandler(Player player, Connection connection, String playerSection) throws SQLException {
-        super("mysql");
         this.connection = connection;
         this.playerSection = playerSection;
         ResultSet set = null;
@@ -33,6 +34,21 @@ public class MySQLCurrencyHandler extends CurrencyHandler {
             if (set != null)
                 safeClose(set);
         }
+    }
+
+    @Override
+    public long getAmount() {
+        return gems;
+    }
+
+    @Override
+    public void setAmount(long amount) {
+        gems = amount;
+    }
+
+    @Override
+    public void addAmount(long amount) {
+        gems += amount;
     }
 
     @SuppressWarnings("SqlResolve")
@@ -52,7 +68,7 @@ public class MySQLCurrencyHandler extends CurrencyHandler {
             }
             statement.executeUpdate();
         } catch (SQLException e) {
-            EnchantLogger.log("Problem updating MySQL table", e);
+            EnchantmentTokens.getEnchantLogger().log(Level.SEVERE, "Problem updating MySQL table", e);
         } finally {
             if (statement != null) {
                 safeClose(statement);
@@ -60,11 +76,16 @@ public class MySQLCurrencyHandler extends CurrencyHandler {
         }
     }
 
+    @Override
+    public String name() {
+        return "mysql";
+    }
+
     public static void safeClose(AutoCloseable closeable) {
         try {
             closeable.close();
         } catch (Exception e) {
-            EnchantLogger.log("Could not close MySQL statement", e);
+            EnchantmentTokens.getEnchantLogger().log(Level.SEVERE, "Could not close MySQL statement", e);
         }
     }
 }
