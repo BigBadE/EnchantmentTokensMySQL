@@ -25,6 +25,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Locale;
 import java.util.logging.Level;
 
 public class MySQLCurrencyHandler implements CurrencyHandler {
@@ -32,21 +33,24 @@ public class MySQLCurrencyHandler implements CurrencyHandler {
     private String playerSection;
     private boolean contains = false;
 
-    long gems = 0;
+    private long gems = 0;
+    private Locale locale = Locale.getDefault();
 
     @SuppressWarnings("SqlResolve")
     public MySQLCurrencyHandler(Player player, Connection connection, String playerSection) throws SQLException {
         this.connection = connection;
         this.playerSection = playerSection;
         ResultSet set = null;
-        try (PreparedStatement preparedStatement = connection.prepareStatement("SELECT gems FROM " + playerSection + " WHERE uuid=? LIMIT 1;")) {
+        try (PreparedStatement preparedStatement = connection.prepareStatement("SELECT gems, locale FROM " + playerSection + " WHERE uuid=? LIMIT 1;")) {
             preparedStatement.setString(1, player.getUniqueId().toString());
             set = preparedStatement.executeQuery();
             if (set.next()) {
                 contains = true;
                 setAmount(set.getLong(1));
+                setLocale(Locale.forLanguageTag(set.getString(2)));
             } else {
                 setAmount(0);
+                setLocale(Locale.getDefault());
             }
         } finally {
             if (set != null)
@@ -75,14 +79,16 @@ public class MySQLCurrencyHandler implements CurrencyHandler {
         PreparedStatement statement = null;
         try {
             if (contains) {
-                statement = connection.prepareStatement("UPDATE ? SET gems=? WHERE uuid=? LIMIT 1;");
+                statement = connection.prepareStatement("UPDATE ? SET gems=?,locale=? WHERE uuid=? LIMIT 1;");
                 statement.setString(1, playerSection);
                 statement.setLong(2, getAmount());
-                statement.setString(3, player.getUniqueId().toString());
+                statement.setString(3, getLocale().toLanguageTag());
+                statement.setString(4, player.getUniqueId().toString());
             } else {
-                statement = connection.prepareStatement("INSERT INTO " + playerSection + " (uuid, gems) VALUES (?, ?);");
+                statement = connection.prepareStatement("INSERT INTO " + playerSection + " (uuid, gems, locale) VALUES (?, ?, ?);");
                 statement.setString(1, player.getUniqueId().toString());
                 statement.setLong(2, getAmount());
+                statement.setString(3, getLocale().toLanguageTag());
             }
             statement.executeUpdate();
         } catch (SQLException e) {
@@ -92,6 +98,16 @@ public class MySQLCurrencyHandler implements CurrencyHandler {
                 safeClose(statement);
             }
         }
+    }
+
+    @Override
+    public Locale getLocale() {
+        return locale;
+    }
+
+    @Override
+    public void setLocale(Locale language) {
+        this.locale = language;
     }
 
     @Override

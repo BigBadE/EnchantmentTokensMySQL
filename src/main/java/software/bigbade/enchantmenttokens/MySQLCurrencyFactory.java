@@ -66,7 +66,7 @@ public class MySQLCurrencyFactory implements CurrencyFactory {
             statement.setString(1, playerSection);
             resultSet = statement.executeQuery();
             if (!resultSet.next()) {
-                try(PreparedStatement createTable = connection.prepareStatement("CREATE TABLE " + playerSection + "(gems LONG NOT NULL, uuid CHAR(36) NOT NULL);")) {
+                try (PreparedStatement createTable = connection.prepareStatement("CREATE TABLE " + playerSection + "(uuid CHAR(36) NOT NULL, gems LONG NOT NULL, locale CHAR(36) NOT NULL);")) {
                     createTable.executeUpdate();
                 }
             }
