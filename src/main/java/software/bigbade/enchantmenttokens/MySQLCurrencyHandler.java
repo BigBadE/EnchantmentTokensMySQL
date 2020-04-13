@@ -29,8 +29,8 @@ import java.util.Locale;
 import java.util.logging.Level;
 
 public class MySQLCurrencyHandler implements CurrencyHandler {
-    private Connection connection;
-    private String playerSection;
+    private final Connection connection;
+    private final String playerSection;
     private boolean contains = false;
 
     private long gems = 0;
