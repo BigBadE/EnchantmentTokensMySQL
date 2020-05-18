@@ -23,6 +23,7 @@ import org.bukkit.entity.Player;
 import software.bigbade.enchantmenttokens.configuration.ConfigurationType;
 import software.bigbade.enchantmenttokens.currency.CurrencyFactory;
 import software.bigbade.enchantmenttokens.currency.CurrencyHandler;
+import software.bigbade.enchantmenttokens.utils.SchedulerHandler;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -37,23 +38,26 @@ public class MySQLCurrencyFactory implements CurrencyFactory {
     private String playerSection;
     private boolean loaded;
 
-    public MySQLCurrencyFactory(ConfigurationSection section) {
-        try {
-            String url = "jdbc:" + new ConfigurationType<>("").getValue("database", section);
-            String username = new ConfigurationType<>("").getValue("username", section);
-            String password = new ConfigurationType<>("").getValue("password", section);
+    public MySQLCurrencyFactory(ConfigurationSection section, SchedulerHandler scheduler) {
+        scheduler.runTaskAsync(() -> {
+            try {
+                String url = "jdbc:" + new ConfigurationType<>("").getValue("database", section);
+                String username = new ConfigurationType<>("").getValue("username", section);
+                String password = new ConfigurationType<>("").getValue("password", section);
 
-            connection = DriverManager.getConnection(url, username, password);
+                connection = DriverManager.getConnection(url, username, password);
 
-            getDatabase(section);
+                getDatabase(section);
 
-            loaded = true;
-        } catch (SQLException e) {
-            EnchantmentTokens.getEnchantLogger().log(Level.SEVERE, "Could not open connection to database", e);
-            loaded = false;
-        }
+                loaded = true;
+            } catch (SQLException e) {
+                EnchantmentTokens.getEnchantLogger().log(Level.SEVERE, "Could not open connection to database", e);
+                loaded = false;
+            }
+        });
     }
 
+    @SuppressWarnings("SqlResolve")
     private void getDatabase(ConfigurationSection section) throws SQLException {
         playerSection = new ConfigurationType<>("players").getValue("section", section);
         if(Pattern.matches("[^a-zA-Z\\d\\s:]", playerSection)) {

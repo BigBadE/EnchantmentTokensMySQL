@@ -29,12 +29,12 @@ import java.util.Locale;
 import java.util.logging.Level;
 
 public class MySQLCurrencyHandler implements CurrencyHandler {
-    private Connection connection;
-    private String playerSection;
+    private final Connection connection;
+    private final String playerSection;
     private boolean contains = false;
 
     private long gems = 0;
-    private Locale locale = Locale.getDefault();
+    private Locale locale;
 
     @SuppressWarnings("SqlResolve")
     public MySQLCurrencyHandler(Player player, Connection connection, String playerSection) throws SQLException {
@@ -50,7 +50,13 @@ public class MySQLCurrencyHandler implements CurrencyHandler {
                 setLocale(Locale.forLanguageTag(set.getString(2)));
             } else {
                 setAmount(0);
-                setLocale(Locale.getDefault());
+                try {
+                    this.locale = Locale.forLanguageTag(player.getLocale());
+                } catch (NullPointerException e) {
+                    //Some resource packs can mess this up
+                    this.locale = Locale.getDefault();
+                }
+                setLocale(locale);
             }
         } finally {
             if (set != null)
