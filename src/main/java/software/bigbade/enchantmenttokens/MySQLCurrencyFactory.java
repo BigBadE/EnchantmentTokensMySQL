@@ -34,11 +34,13 @@ import java.util.logging.Level;
 import java.util.regex.Pattern;
 
 public class MySQLCurrencyFactory implements CurrencyFactory {
+    private final SchedulerHandler scheduler;
     private Connection connection;
     private String playerSection;
     private boolean loaded;
 
     public MySQLCurrencyFactory(ConfigurationSection section, SchedulerHandler scheduler) {
+        this.scheduler = scheduler;
         scheduler.runTaskAsync(() -> {
             try {
                 String url = "jdbc:" + new ConfigurationType<>("").getValue("database", section);
@@ -60,7 +62,7 @@ public class MySQLCurrencyFactory implements CurrencyFactory {
     @SuppressWarnings("SqlResolve")
     private void getDatabase(ConfigurationSection section) throws SQLException {
         playerSection = new ConfigurationType<>("players").getValue("section", section);
-        if(Pattern.matches("[^a-zA-Z\\d\\s:]", playerSection)) {
+        if (Pattern.matches("[^a-zA-Z\\d\\s:]", playerSection)) {
             loaded = false;
             EnchantmentTokens.getEnchantLogger().log(Level.SEVERE, "NON-ALPHANUMERIC CHARACTER DETECTED. POSSIBLE MYSQL INJECTION!");
             return;
@@ -75,19 +77,22 @@ public class MySQLCurrencyFactory implements CurrencyFactory {
                 }
             }
         } finally {
-            if(resultSet != null)
+            if (resultSet != null)
                 MySQLCurrencyHandler.safeClose(resultSet);
         }
     }
 
     @Override
     public CurrencyHandler newInstance(Player player) {
-        try {
-            return new MySQLCurrencyHandler(player, connection, playerSection);
-        } catch (SQLException e) {
-            EnchantmentTokens.getEnchantLogger().log(Level.SEVERE, "Problem initializing MySQL", e);
-        }
-        return null;
+        MySQLCurrencyHandler handler = new MySQLCurrencyHandler(scheduler, connection, playerSection);
+        scheduler.runTaskAsync(() -> {
+            try {
+                handler.setup(player);
+            } catch (SQLException e) {
+                EnchantmentTokens.getEnchantLogger().log(Level.SEVERE, "Could not setup MySQL currency handler", e);
+            }
+        });
+        return handler;
     }
 
     @Override

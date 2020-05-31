@@ -20,6 +20,7 @@ package software.bigbade.enchantmenttokens;
 
 import org.bukkit.entity.Player;
 import software.bigbade.enchantmenttokens.currency.CurrencyHandler;
+import software.bigbade.enchantmenttokens.utils.SchedulerHandler;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -31,15 +32,20 @@ import java.util.logging.Level;
 public class MySQLCurrencyHandler implements CurrencyHandler {
     private final Connection connection;
     private final String playerSection;
+    private final SchedulerHandler scheduler;
     private boolean contains = false;
 
     private long gems = 0;
     private Locale locale;
 
-    @SuppressWarnings("SqlResolve")
-    public MySQLCurrencyHandler(Player player, Connection connection, String playerSection) throws SQLException {
+    public MySQLCurrencyHandler(SchedulerHandler scheduler, Connection connection, String playerSection) {
+        this.scheduler = scheduler;
         this.connection = connection;
         this.playerSection = playerSection;
+    }
+
+    @SuppressWarnings("SqlResolve")
+    public void setup(Player player) throws SQLException {
         ResultSet set = null;
         try (PreparedStatement preparedStatement = connection.prepareStatement("SELECT gems, locale FROM " + playerSection + " WHERE uuid=? LIMIT 1;")) {
             preparedStatement.setString(1, player.getUniqueId().toString());
@@ -79,9 +85,17 @@ public class MySQLCurrencyHandler implements CurrencyHandler {
         gems += amount;
     }
 
-    @SuppressWarnings("SqlResolve")
     @Override
     public void savePlayer(Player player, boolean async) {
+        if(async) {
+            scheduler.runTaskAsync(() -> save(player));
+        } else {
+            save(player);
+        }
+    }
+
+    @SuppressWarnings("SqlResolve")
+    private void save(Player player) {
         PreparedStatement statement = null;
         try {
             if (contains) {
