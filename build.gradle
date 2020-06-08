@@ -1,0 +1,47 @@
+plugins {
+    id 'com.github.johnrengelman.shadow' version '5.2.0'
+    id 'java'
+}
+
+repositories {
+    mavenLocal()
+    maven {
+        url = uri('https://repo1.maven.org/maven2')
+    }
+
+    maven {
+        url = uri('https://maven.pkg.github.com/bigbade/enchantmenttokens')
+    }
+
+    maven {
+        url = uri('https://hub.spigotmc.org/nexus/content/repositories/snapshots/')
+    }
+}
+
+dependencies {
+    implementation 'mysql:mysql-connector-java:8.0.20'
+    compileOnly 'org.spigotmc:spigot-api:1.15.2-R0.1-SNAPSHOT'
+    compileOnly 'software.bigbade:EnchantmentTokensAPI:1.0'
+}
+
+tasks.jar.enabled = false
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+group = 'software.bigbade'
+version = '1.0'
+sourceCompatibility = '1.8'
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
+shadowJar {
+    archivesBaseName = 'EnchantmentTokensMySQL'
+
+    exclude 'META-INF/**'
+
+    minimize {
+        exclude('software.bigbade')
+    }
+}

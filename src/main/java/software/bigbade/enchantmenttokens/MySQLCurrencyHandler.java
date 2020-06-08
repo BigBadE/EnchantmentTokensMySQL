@@ -32,10 +32,7 @@ import java.util.logging.Level;
 public class MySQLCurrencyHandler implements CurrencyHandler {
     private final Connection connection;
     private final String playerSection;
-<<<<<<< HEAD
     private final SchedulerHandler scheduler;
-=======
->>>>>>> b781e0e0befd60b8f754e0e28ee5f91e2122be95
     private boolean contains = false;
 
     private long gems = 0;
