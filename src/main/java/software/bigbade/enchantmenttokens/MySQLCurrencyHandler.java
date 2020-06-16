@@ -18,31 +18,28 @@
 
 package software.bigbade.enchantmenttokens;
 
+import lombok.RequiredArgsConstructor;
 import org.bukkit.entity.Player;
+import software.bigbade.enchantmenttokens.api.wrappers.EnchantmentChain;
 import software.bigbade.enchantmenttokens.currency.CurrencyHandler;
-import software.bigbade.enchantmenttokens.utils.SchedulerHandler;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Locale;
+import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
 
+@RequiredArgsConstructor
 public class MySQLCurrencyHandler implements CurrencyHandler {
     private final Connection connection;
     private final String playerSection;
-    private final SchedulerHandler scheduler;
+    private final String uuid;
     private boolean contains = false;
 
     private long gems = 0;
     private Locale locale;
-
-    public MySQLCurrencyHandler(SchedulerHandler scheduler, Connection connection, String playerSection) {
-        this.scheduler = scheduler;
-        this.connection = connection;
-        this.playerSection = playerSection;
-    }
 
     @SuppressWarnings("SqlResolve")
     public void setup(Player player) throws SQLException {
@@ -71,27 +68,25 @@ public class MySQLCurrencyHandler implements CurrencyHandler {
     }
 
     @Override
-    public long getAmount() {
-        return gems;
+    public CompletableFuture<Long> getAmount() {
+        CompletableFuture<Long> future = new CompletableFuture<>();
+        new EnchantmentChain(uuid).execute(() -> future.complete(gems));
+        return future;
     }
 
     @Override
     public void setAmount(long amount) {
-        gems = amount;
+        new EnchantmentChain(uuid).execute(() -> gems = amount);
     }
 
     @Override
     public void addAmount(long amount) {
-        gems += amount;
+        new EnchantmentChain(uuid).execute(() -> gems += amount);
     }
 
     @Override
-    public void savePlayer(Player player, boolean async) {
-        if(async) {
-            scheduler.runTaskAsync(() -> save(player));
-        } else {
-            save(player);
-        }
+    public void savePlayer(Player player) {
+        save(player);
     }
 
     @SuppressWarnings("SqlResolve")
@@ -101,13 +96,13 @@ public class MySQLCurrencyHandler implements CurrencyHandler {
             if (contains) {
                 statement = connection.prepareStatement("UPDATE ? SET gems=?,locale=? WHERE uuid=? LIMIT 1;");
                 statement.setString(1, playerSection);
-                statement.setLong(2, getAmount());
+                statement.setLong(2, gems);
                 statement.setString(3, getLocale().toLanguageTag());
                 statement.setString(4, player.getUniqueId().toString());
             } else {
                 statement = connection.prepareStatement("INSERT INTO " + playerSection + " (uuid, gems, locale) VALUES (?, ?, ?);");
                 statement.setString(1, player.getUniqueId().toString());
-                statement.setLong(2, getAmount());
+                statement.setLong(2, gems);
                 statement.setString(3, getLocale().toLanguageTag());
             }
             statement.executeUpdate();

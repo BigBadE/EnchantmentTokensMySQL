@@ -20,10 +20,10 @@ package software.bigbade.enchantmenttokens;
 
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
+import software.bigbade.enchantmenttokens.api.wrappers.EnchantmentChain;
 import software.bigbade.enchantmenttokens.configuration.ConfigurationType;
 import software.bigbade.enchantmenttokens.currency.CurrencyFactory;
 import software.bigbade.enchantmenttokens.currency.CurrencyHandler;
-import software.bigbade.enchantmenttokens.utils.SchedulerHandler;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -34,14 +34,12 @@ import java.util.logging.Level;
 import java.util.regex.Pattern;
 
 public class MySQLCurrencyFactory implements CurrencyFactory {
-    private final SchedulerHandler scheduler;
     private Connection connection;
     private String playerSection;
     private boolean loaded;
 
-    public MySQLCurrencyFactory(ConfigurationSection section, SchedulerHandler scheduler) {
-        this.scheduler = scheduler;
-        scheduler.runTaskAsync(() -> {
+    public MySQLCurrencyFactory(ConfigurationSection section) {
+        new EnchantmentChain().async(() -> {
             try {
                 String url = "jdbc:" + new ConfigurationType<>("").getValue("database", section);
                 String username = new ConfigurationType<>("").getValue("username", section);
@@ -56,7 +54,7 @@ public class MySQLCurrencyFactory implements CurrencyFactory {
                 EnchantmentTokens.getEnchantLogger().log(Level.SEVERE, "Could not open connection to database", e);
                 loaded = false;
             }
-        });
+        }).execute();
     }
 
     @SuppressWarnings("SqlResolve")
@@ -84,14 +82,14 @@ public class MySQLCurrencyFactory implements CurrencyFactory {
 
     @Override
     public CurrencyHandler newInstance(Player player) {
-        MySQLCurrencyHandler handler = new MySQLCurrencyHandler(scheduler, connection, playerSection);
-        scheduler.runTaskAsync(() -> {
+        MySQLCurrencyHandler handler = new MySQLCurrencyHandler(connection, playerSection, player.getUniqueId().toString());
+        new EnchantmentChain().async(() -> {
             try {
                 handler.setup(player);
             } catch (SQLException e) {
                 EnchantmentTokens.getEnchantLogger().log(Level.SEVERE, "Could not setup MySQL currency handler", e);
             }
-        });
+        }).execute();
         return handler;
     }
 
