@@ -19,7 +19,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'mysql:mysql-connector-java:8.0.20'
+    implementation 'mysql:mysql-connector-java:8.0.21'
     shadow 'org.spigotmc:spigot-api:1.15.2-R0.1-SNAPSHOT'
     shadow 'software.bigbade:EnchantmentTokensAPI:1.0'
 
