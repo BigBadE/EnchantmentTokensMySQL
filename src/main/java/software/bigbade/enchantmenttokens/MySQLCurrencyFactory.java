@@ -75,8 +75,9 @@ public class MySQLCurrencyFactory implements CurrencyFactory {
                 }
             }
         } finally {
-            if (resultSet != null)
+            if (resultSet != null) {
                 MySQLCurrencyHandler.safeClose(resultSet);
+            }
         }
     }
 

@@ -53,17 +53,17 @@ public class MySQLCurrencyHandler implements CurrencyHandler {
                 setLocale(Locale.forLanguageTag(set.getString(2)));
             } else {
                 setAmount(0);
-                try {
-                    this.locale = Locale.forLanguageTag(player.getLocale());
-                } catch (NullPointerException e) {
+                Locale foundLocale = Locale.forLanguageTag(player.getLocale());
+                if(foundLocale.getLanguage().isEmpty) {
                     //Some resource packs can mess this up
-                    this.locale = Locale.getDefault();
+                    foundLocale = Locale.getDefault();
                 }
-                setLocale(locale);
+                setLocale(foundLocale);
             }
         } finally {
-            if (set != null)
+            if (set != null) {
                 safeClose(set);
+            }
         }
     }
 
