@@ -19,7 +19,9 @@
 package software.bigbade.enchantmenttokens;
 
 import lombok.RequiredArgsConstructor;
+import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
+import software.bigbade.enchantmenttokens.api.EnchantmentPlayer;
 import software.bigbade.enchantmenttokens.api.wrappers.EnchantmentChain;
 import software.bigbade.enchantmenttokens.currency.CurrencyHandler;
 
@@ -54,7 +56,7 @@ public class MySQLCurrencyHandler implements CurrencyHandler {
             } else {
                 setAmount(0);
                 Locale foundLocale = Locale.forLanguageTag(player.getLocale());
-                if(foundLocale.getLanguage().isEmpty) {
+                if (foundLocale.getLanguage().isEmpty()) {
                     //Some resource packs can mess this up
                     foundLocale = Locale.getDefault();
                 }
@@ -70,27 +72,27 @@ public class MySQLCurrencyHandler implements CurrencyHandler {
     @Override
     public CompletableFuture<Long> getAmount() {
         CompletableFuture<Long> future = new CompletableFuture<>();
-        new EnchantmentChain(uuid).execute(() -> future.complete(gems));
+        new EnchantmentChain<>(uuid).execute(() -> future.complete(gems));
         return future;
     }
 
     @Override
     public void setAmount(long amount) {
-        new EnchantmentChain(uuid).execute(() -> gems = amount);
+        new EnchantmentChain<>(uuid).execute(() -> gems = amount);
     }
 
     @Override
     public void addAmount(long amount) {
-        new EnchantmentChain(uuid).execute(() -> gems += amount);
+        new EnchantmentChain<>(uuid).execute(() -> gems += amount);
     }
 
     @Override
-    public void savePlayer(Player player) {
-        save(player);
+    public void savePlayer(EnchantmentPlayer player) {
+        save();
     }
 
     @SuppressWarnings("SqlResolve")
-    private void save(Player player) {
+    private void save() {
         PreparedStatement statement = null;
         try {
             if (contains) {
@@ -98,10 +100,10 @@ public class MySQLCurrencyHandler implements CurrencyHandler {
                 statement.setString(1, playerSection);
                 statement.setLong(2, gems);
                 statement.setString(3, getLocale().toLanguageTag());
-                statement.setString(4, player.getUniqueId().toString());
+                statement.setString(4, uuid);
             } else {
                 statement = connection.prepareStatement("INSERT INTO " + playerSection + " (uuid, gems, locale) VALUES (?, ?, ?);");
-                statement.setString(1, player.getUniqueId().toString());
+                statement.setString(1, uuid);
                 statement.setLong(2, gems);
                 statement.setString(3, getLocale().toLanguageTag());
             }
@@ -128,6 +130,21 @@ public class MySQLCurrencyHandler implements CurrencyHandler {
     @Override
     public String name() {
         return "mysql";
+    }
+
+    @Override
+    public void storePlayerData(NamespacedKey namespacedKey, String s) {
+
+    }
+
+    @Override
+    public String getPlayerData(NamespacedKey namespacedKey) {
+        return null;
+    }
+
+    @Override
+    public void removePlayerData(NamespacedKey namespacedKey) {
+
     }
 
     public static void safeClose(AutoCloseable closeable) {
