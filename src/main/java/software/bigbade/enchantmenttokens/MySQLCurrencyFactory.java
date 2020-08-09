@@ -57,7 +57,6 @@ public class MySQLCurrencyFactory implements CurrencyFactory {
         }).execute();
     }
 
-    @SuppressWarnings("SqlResolve")
     private void getDatabase(ConfigurationSection section) throws SQLException {
         playerSection = new ConfigurationType<>("players").getValue("section", section);
         if (Pattern.matches("[^a-zA-Z\\d\\s:]", playerSection)) {
@@ -73,6 +72,9 @@ public class MySQLCurrencyFactory implements CurrencyFactory {
                 try (PreparedStatement createTable = connection.prepareStatement("CREATE TABLE " + playerSection + "(uuid CHAR(36) NOT NULL, gems LONG NOT NULL, locale CHAR(36) NOT NULL);")) {
                     createTable.executeUpdate();
                 }
+                try (PreparedStatement createTable = connection.prepareStatement("CREATE TABLE " + playerSection + "data(key VARCHAR(255) NOT NULL, data TEXT);")) {
+                    createTable.executeUpdate();
+                }
             }
         } finally {
             if (resultSet != null) {
@@ -84,7 +86,7 @@ public class MySQLCurrencyFactory implements CurrencyFactory {
     @Override
     public CurrencyHandler newInstance(Player player) {
         MySQLCurrencyHandler handler = new MySQLCurrencyHandler(connection, playerSection, player.getUniqueId().toString());
-        new EnchantmentChain().async(() -> {
+        new EnchantmentChain<>().async(() -> {
             try {
                 handler.setup(player);
             } catch (SQLException e) {

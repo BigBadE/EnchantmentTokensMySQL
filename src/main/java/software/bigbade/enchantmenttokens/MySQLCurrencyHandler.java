@@ -29,19 +29,39 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
+import java.util.regex.Pattern;
 
 @RequiredArgsConstructor
 public class MySQLCurrencyHandler implements CurrencyHandler {
+    private static final Pattern NAMESPACED_KEY = Pattern.compile(":");
+
     private final Connection connection;
     private final String playerSection;
     private final String uuid;
+    private final Map<NamespacedKey, String> playerData = new HashMap<>();
     private boolean contains = false;
-
     private long gems = 0;
     private Locale locale;
+
+    @SuppressWarnings("deprecation")
+    private static NamespacedKey getKey(String key) {
+        String[] data = NAMESPACED_KEY.split(key);
+        assert data.length == 2;
+        return new NamespacedKey(data[0], data[1]);
+    }
+
+    public static void safeClose(AutoCloseable closeable) {
+        try {
+            closeable.close();
+        } catch (Exception e) {
+            EnchantmentTokens.getEnchantLogger().log(Level.SEVERE, "Could not close MySQL statement", e);
+        }
+    }
 
     @SuppressWarnings("SqlResolve")
     public void setup(Player player) throws SQLException {
@@ -65,6 +85,13 @@ public class MySQLCurrencyHandler implements CurrencyHandler {
         } finally {
             if (set != null) {
                 safeClose(set);
+            }
+        }
+        try (PreparedStatement preparedStatement = connection.prepareStatement("SELECT keys, values FROM " + playerSection + "data;");
+             ResultSet resultSet = preparedStatement.executeQuery()) {
+
+            while (resultSet.next()) {
+                playerData.put(getKey(resultSet.getString(1)), resultSet.getString(2));
             }
         }
     }
@@ -133,25 +160,17 @@ public class MySQLCurrencyHandler implements CurrencyHandler {
     }
 
     @Override
-    public void storePlayerData(NamespacedKey namespacedKey, String s) {
-
+    public void storePlayerData(NamespacedKey namespacedKey, String value) {
+        playerData.put(namespacedKey, value);
     }
 
     @Override
     public String getPlayerData(NamespacedKey namespacedKey) {
-        return null;
+        return playerData.get(namespacedKey);
     }
 
     @Override
     public void removePlayerData(NamespacedKey namespacedKey) {
-
-    }
-
-    public static void safeClose(AutoCloseable closeable) {
-        try {
-            closeable.close();
-        } catch (Exception e) {
-            EnchantmentTokens.getEnchantLogger().log(Level.SEVERE, "Could not close MySQL statement", e);
-        }
+        playerData.remove(namespacedKey);
     }
 }
