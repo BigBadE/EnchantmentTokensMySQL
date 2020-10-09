@@ -23,7 +23,7 @@ dependencies {
     shadow 'org.spigotmc:spigot-api:1.15.2-R0.1-SNAPSHOT'
     shadow 'software.bigbade:EnchantmentTokensAPI:1.0'
 
-    shadow 'org.projectlombok:lombok:1.18.12'
+    shadow 'org.projectlombok:lombok:1.18.14'
     annotationProcessor 'org.projectlombok:lombok:1.18.12'
 
     testCompileOnly 'org.projectlombok:lombok:1.18.12'
