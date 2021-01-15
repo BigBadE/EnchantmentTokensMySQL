@@ -1,6 +1,6 @@
 /*
- * Addons for the Custom Enchantment API in Minecraft
- * Copyright (C) 2020 BigBadE
+ * Custom enchantments for Minecraft
+ * Copyright (C) 2021 Big_Bad_E
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,14 +16,14 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package software.bigbade.enchantmenttokens;
+package com.bigbade.enchantmenttokens;
 
 import lombok.RequiredArgsConstructor;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
-import software.bigbade.enchantmenttokens.api.EnchantmentPlayer;
-import software.bigbade.enchantmenttokens.api.wrappers.EnchantmentChain;
-import software.bigbade.enchantmenttokens.currency.CurrencyHandler;
+import com.bigbade.enchantmenttokens.api.EnchantmentPlayer;
+import com.bigbade.enchantmenttokens.api.wrappers.EnchantmentChain;
+import com.bigbade.enchantmenttokens.currency.CurrencyHandler;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -59,7 +59,7 @@ public class MySQLCurrencyHandler implements CurrencyHandler {
         try {
             closeable.close();
         } catch (Exception e) {
-            EnchantmentTokens.getEnchantLogger().log(Level.SEVERE, "Could not close MySQL statement", e);
+            EnchantmentTokens.getLogger().log(Level.SEVERE, "Could not close MySQL statement", e);
         }
     }
 
@@ -78,7 +78,7 @@ public class MySQLCurrencyHandler implements CurrencyHandler {
                 Locale foundLocale = Locale.forLanguageTag(player.getLocale());
                 if (foundLocale.getLanguage().isEmpty()) {
                     //Some resource packs can mess this up
-                    foundLocale = Locale.getDefault();
+                    foundLocale = EnchantmentTokens.getDefaultLocale();
                 }
                 setLocale(foundLocale);
             }
@@ -136,7 +136,7 @@ public class MySQLCurrencyHandler implements CurrencyHandler {
             }
             statement.executeUpdate();
         } catch (SQLException e) {
-            EnchantmentTokens.getEnchantLogger().log(Level.SEVERE, "Problem updating MySQL table", e);
+            EnchantmentTokens.getLogger().log(Level.SEVERE, "Problem updating MySQL table", e);
         } finally {
             if (statement != null) {
                 safeClose(statement);
